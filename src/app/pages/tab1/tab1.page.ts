@@ -1,3 +1,4 @@
+import { ComponentsModule } from './../../components/components.module';
 import { environment } from 'src/environments/environment';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { GestionApiService } from 'src/app/services/gestion-api.service';
@@ -123,10 +124,11 @@ export class Tab1Page implements OnInit {
    * realizar this.container.nativeElement.
    */
   @ViewChild('container') container!: ElementRef;
+  @ViewChild('ajustarAlineacionGraficas') ajustarAlineacionGraficas!: ElementRef;
 
   constructor(public gestionServiceApi: GestionApiService) {}
 
-  ngOnInit() {
+  ngOnInit() {    
     this.categorias.forEach(categoria => {
       this.gestionServiceApi.cargarCategoria(categoria);
     });
@@ -160,6 +162,8 @@ export class Tab1Page implements OnInit {
     let headerHeight = 55; //Altura del padding que le hemos dado al header
     let footerHeight = 20; //Altura del padding que le hemos dado al footer
     let currentPageHeight = headerHeight;
+    let esTabla:boolean[] = [];
+    let widthTable = 0;
 
     /* Realizamos un bucle para todas las secciones.
      * Importante: html2canvas es asíncrono, por tanto, tendremos que realizar el bucle entero y luego html2canvas se encargará de la creación del pdf.
@@ -168,6 +172,8 @@ export class Tab1Page implements OnInit {
      */
     while (currentSectionIndex < totalSections) {
       const section = sections[currentSectionIndex];
+      esTabla[currentSectionIndex] = section.querySelector("table") !== null;
+
       html2canvas(section).then(canvas => {
         const imageData = canvas.toDataURL('image/jpg');
         let width = doc.internal.pageSize.getWidth();
@@ -195,9 +201,17 @@ export class Tab1Page implements OnInit {
         if(height+currentPageHeight+footerHeight >= doc.internal.pageSize.getHeight()){
           height = altoMax-currentPageHeight-footerHeight;
           width = canvas.width * (height / canvas.height);
+          if(esTabla[contSections]){
+            widthTable = width;
+          }
           doc.addImage(imageData, 'JPG', 0, headerHeight, width, height);
         } else{
-          doc.addImage(imageData, 'JPG', 0, currentPageHeight, width, height);
+          if (esTabla[contSections] && widthTable !== 0){
+            let height = canvas.height * (widthTable / canvas.width);
+            doc.addImage(imageData, 'JPG', 0, currentPageHeight, widthTable, height);
+          }else{
+            doc.addImage(imageData, 'JPG', 0, currentPageHeight, width, height);
+          }
         }
 
         //Actualizamos el currentPageHeigth para ver si ppodemos insertar otra imagen en la misma página o no.
