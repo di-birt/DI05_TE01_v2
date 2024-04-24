@@ -230,7 +230,7 @@ export class Tab1Page implements OnInit {
 
   addPageConfig(doc:jsPDF) {
     for (let i = 1; i <= doc.getNumberOfPages(); i++) {
-      // Añadimos la página
+      // Seleccionamos la página que queremos modificar.
       doc.setPage(i);
       this.addPageHeader(doc);
       this.addPageFooter(doc, i);
